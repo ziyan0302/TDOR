@@ -30,7 +30,7 @@ if dataset == "ind":
     step4 = 800
     gamma = 0.9996
 
-    from data.IND.inD import inD as DS
+    from cvpr2022.data.IND.inD import inD as DS
 
 else:
     horizon = 20
@@ -46,7 +46,7 @@ else:
     step3 = 50  
     step4 = 100  
 
-    from data.SDD.sdd import sdd as DS
+    from cvpr2022.data.SDD.sdd import sdd as DS
 
     if dataset=="sdd":
         val_type="val"

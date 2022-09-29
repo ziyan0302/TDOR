@@ -44,7 +44,7 @@ def gaussian_2d( mu1mu2s1s2rho, x1x2):
 import scipy.io as scp
 
 
-or_lbls = scp.loadmat('./data/SDD/img_lbls.mat')
+or_lbls = scp.loadmat('./cvpr2022/data/SDD/img_lbls.mat')
 img_lbls = or_lbls['img_lbls']
 
 

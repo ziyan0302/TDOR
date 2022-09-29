@@ -16,7 +16,7 @@ if dataset=="ind":
     nei_dim=0
     type="test"
 
-    from data.IND.inD import inD as DS
+    from cvpr2022.data.IND.inD import inD as DS
 else:
     horizon = 20
     fut_len = 12
@@ -24,18 +24,18 @@ else:
     nei_dim=2
     type="sddtest"
 
-    from data.SDD.sdd import sdd as DS
+    from cvpr2022.data.SDD.sdd import sdd as DS
 
 
 net = Model(horizon, fut_len,nei_dim,grid_extent).float().to(device)
 
 
 if dataset=="ind":
-    checkpoint = torch.load("./pretrained/indend.tar",map_location='cuda:0')
+    checkpoint = torch.load("./cvpr2022/pretrained/indend.tar",map_location='cuda:0')
 elif dataset=="trajnet":
-    checkpoint = torch.load("./pretrained/trajnetend.tar",map_location='cuda:0')
+    checkpoint = torch.load("./cvpr2022/pretrained/trajnetend.tar",map_location='cuda:0')
 else:
-    checkpoint = torch.load("./pretrained/sddend.tar",map_location='cuda:0')
+    checkpoint = torch.load("./cvpr2022/pretrained/sddend.tar",map_location='cuda:0')
 
 test_set = DS(dataset,horizon=horizon, fut_len=fut_len, type="test", grid_extent=grid_extent)
 
