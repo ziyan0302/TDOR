@@ -2,10 +2,10 @@ import torch.nn as nn
 import torch
 import torchvision.models as mdl
 import numpy as np
-
+import pdb
 class ObsEncoder(nn.Module):
 
-    def __init__(self,nei_dim=2,hist_dim=2,scene_dim=32,motion_dim=64,grid_dim=25):
+    def __init__(self,noise,nei_dim=2,hist_dim=2,scene_dim=32,motion_dim=64,grid_dim=25):
 
         super(ObsEncoder, self).__init__()
 
@@ -25,6 +25,12 @@ class ObsEncoder(nn.Module):
         self.scene_enc=nn.Sequential(resnet34.conv1, resnet34.bn1, resnet34.relu, resnet34.maxpool, resnet34.layer1,nn.Conv2d(64, scene_dim, (2, 2), (2, 2)),nn.LeakyReLU(0.1))
 
         self.hist_enc = nn.GRU(hist_dim, motion_dim, batch_first=True)
+        
+        # self.noise= nn.Parameter(torch.randn(3,200,200))
+        # self.noise= nn.Parameter(torch.zeros((3,200,200),device="cuda"),requires_grad=True)
+        self.noise = noise
+        # torch.FloatTensor(7, 32, 32, device="cuda")
+        
 
         if nei_dim!=0:
 
@@ -35,7 +41,16 @@ class ObsEncoder(nn.Module):
             self.histrot_enc =nn.GRU(motion_dim, motion_dim,batch_first=True)#
 
     def forward(self,hist, neighbors, img,r_mat,type,device):
-
+        
+        # tmp = img[0].data.cpu().numpy()
+        # tmp1 = np.sum(tmp, axis=0)
+        # mask = (tmp1 <0)
+        # import matplotlib.pyplot as plt
+        # fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        # ax.imshow(tmp)
+        # plt.show()
+        # self.noise = self.noise.expand(img.shape[0],-1,-1,-1)
+        img = torch.add(img,self.noise)
         scene_feats = self.scene_enc(img)
 
         motion_feats =self.hist_enc(hist)[1][0]

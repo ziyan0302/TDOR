@@ -24,7 +24,7 @@ Here is the detail of data preprocessing. You can skip it by using the data from
 
 2. Run [script](process_trajnet.py) to process the downloaded "train_trajnet.pkl" and "test_trajnet.pkl":
       ```
-      python data/SDD/process_trajnet.py
+      python3 data/SDD/process_trajnet.py
       ``` 
 
 
@@ -33,7 +33,7 @@ Here is the detail of data preprocessing. You can skip it by using the data from
 
 2. Run [script](process_p2t.py) to process the downloaded "SDDtrain.mat", "SDDval.mat" and "SDDtest.mat":
       ```
-      python data/SDD/process_p2t.py
+      python3 data/SDD/process_p2t.py
       ``` 
    
 
@@ -43,7 +43,7 @@ Here is the detail of data preprocessing. You can skip it by using the data from
 
 2. Run [script](process_trajnet.py) to process the downloaded "inD_train.pickle" and "inD_test.pickle":
       ```
-      python data/SDD/process_inD.py
+      python3 data/SDD/process_inD.py
       ``` 
       
 ### Training 
@@ -52,7 +52,7 @@ Here is the detail of data preprocessing. You can skip it by using the data from
 Training the model for Trajnet:
 
       ```
-      python train.py  --dataset "trajnet"
+      python3 train.py  --dataset "trajnet"
       ``` 
 For SDD(p2t split) or inD, the "trajnet" need to be replaced by "sdd" or "ind".   
 
@@ -61,7 +61,7 @@ For SDD(p2t split) or inD, the "trajnet" need to be replaced by "sdd" or "ind".
 Evaluating on Trajnet dataset:
 
       ```
-      python eval.py  --dataset "trajnet"
+      python3 eval.py  --dataset "trajnet"
       ``` 
 For SDD(p2t split) or inD, the "trajnet" need to be replaced by "sdd" or "ind".   
 

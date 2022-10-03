@@ -4,17 +4,39 @@ import time
 import math
 import argparse
 from model.full_model import Model
+import pdb
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter()
+import datetime
+import os
+import numpy as np
+import random
+import torchvision.transforms as tsfm
+inv_normalize = tsfm.Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225], std=[1/0.229, 1/0.224, 1/0.225])
+
 
 # Initialize device:
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default="eth")
+# parser.add_argument('--dataset', default="eth")
+parser.add_argument('--dataset', default="trajnet")
 parser.add_argument('--device', default="cuda:0")
+parser.add_argument('--add-noise', default="False")
 args = parser.parse_args()
 
+# Seed
+seed = 123
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+np.random.seed(seed)
+random.seed(seed)
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 device = torch.device(args.device)
 dataset = args.dataset
+add_noise = args.add_noise
 eval_every=1000
 val_type="test"
 
@@ -62,7 +84,6 @@ tr_dl = DataLoader(tr_set,
                    shuffle=True,
                    num_workers=8
                    )
-
 val_dl = DataLoader(val_set,
                     batch_size=64,
                     shuffle=False,
@@ -88,9 +109,16 @@ start_epoch = 1
 min_val_loss = math.inf
 min_epoch = 0
 
+start_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+training_result_dir = "./results/" + start_time + "/"
+if not os.path.exists(training_result_dir):
+    os.makedirs(training_result_dir)
+
+
+
 type = "omgs"
 net.train()
-
+totali = 0
 for epoch in range(step4):
 
     if epoch == step1:
@@ -126,13 +154,18 @@ for epoch in range(step4):
         t_optimizer = torch.optim.Adam(parameters, lr=1e-4)  # , weight_decay=1e-4
 
     for i, data in enumerate(tr_dl):
-
-        loss, _, _, _, _, _, count = net(data, temp=temp, type=type, device=device)
-
+        totali +=1
+        loss, _, _, _, _, _, count = net(data, temp=temp, type=type, device=device, add_noise=add_noise)
+        # print("loss: ",loss)
+        writer.add_scalar('loss', loss, totali )
+        
+        
+        
         t_optimizer.zero_grad()
         loss.backward()
         a = torch.nn.utils.clip_grad_norm_(parameters, 10)
         t_optimizer.step()
+
 
         if type == "dist" :
             temp = temp * gamma
@@ -141,7 +174,6 @@ for epoch in range(step4):
             net.eval()
 
             with torch.no_grad():
-
                 agg_val_loss = 0
                 policy_loss = 0
                 traj_loss = 0
@@ -153,7 +185,7 @@ for epoch in range(step4):
                 # Load batch
                 for k, data_val in enumerate(val_dl):
                     loss, policy, traj, ogms_rce, ogms_ce, min_ade, count = net(data_val, temp=temp, type=type,
-                                                                                device=device)
+                                                                                device=device, add_noise = add_noise)
 
                     agg_val_loss += loss.item() * count
                     policy_loss += policy.item()
@@ -164,6 +196,7 @@ for epoch in range(step4):
                     val_batch_count += count
 
             val_loss = agg_val_loss / val_batch_count
+            
 
             if val_loss < min_val_loss:
                 min_val_loss = val_loss
@@ -175,7 +208,7 @@ for epoch in range(step4):
                     'temp': temp,
                     'loss': val_loss,
                     'min_val_loss': min_val_loss
-                }, model_path)
+                }, os.path.join(training_result_dir,model_path))
 
             print("Epoch no:", epoch,
                   "| temp", format(temp, '0.5f'),
@@ -193,3 +226,8 @@ for epoch in range(step4):
             st_time = time.time()
 
             net.train()
+
+    writer.add_scalar('current time', time.time(), epoch )
+    writer.add_image('noise', net.noise, epoch)
+    writer.add_images('my_image_batch', inv_normalize(data[3]), epoch)
+    writer.add_image('sample a img', inv_normalize(data[3][0]), epoch)

@@ -1,1 +1,4 @@
 cvpr2022/
+*.pyc
+*.pkl
+*.tar

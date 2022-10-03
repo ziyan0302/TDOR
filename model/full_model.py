@@ -17,7 +17,9 @@ class Model(nn.Module):
 
         super(Model, self).__init__()
 
-        self.net_o = ObsEncoder(nei_dim,scene_dim=scene_dim,motion_dim=motion_dim)#,hist_dim=7
+        self.noise= nn.Parameter(torch.zeros((3,200,200),device="cuda"),requires_grad=True)
+        
+        self.net_o = ObsEncoder(self.noise, nei_dim,scene_dim=scene_dim,motion_dim=motion_dim)#,hist_dim=7
 
         self.net_h = OGMDecoder(fut_len,scene_dim=scene_dim,motion_dim=motion_dim)#,filter_size=7
 
@@ -28,8 +30,11 @@ class Model(nn.Module):
         self.net_c = TrajCluster(fut_len,motion_dim=motion_dim)#,num_cluster=10
 
         self.grid_extent=grid_extent
+        
+        
 
     def vis(self,hist,fut,waypts_e,img):
+        print("new vis")
         img = img.permute(0, 2, 3, 1).data.cpu().numpy()
         # heatmap=heatmap.cpu().numpy()
         fut = fut.data.cpu().numpy()
@@ -45,28 +50,39 @@ class Model(nn.Module):
 
 
             ax.plot(hist[j, :, 0], -hist[j, :, 1], color='blue', marker='s', markeredgecolor='blue', markersize=2,
-                    alpha=1)
+                    alpha=1, label="hist")
 
             ax.plot(fut[j, :, 0], -fut[j, :, 1], color='green', marker='.', markeredgecolor='green', markersize=5,
-                    alpha=1)
+                    alpha=1, label="fut")
 
             ax.plot(waypts_e[j, :, 0]*self.grid_extent, -waypts_e[j, :, 1]*self.grid_extent, color='yellow', marker='.', markeredgecolor='yellow',
-                    markersize=5, alpha=1)
+                    markersize=5, alpha=1, label="waypts_e")
+            
+            plt.legend(loc='upper right')
 
 
             plt.show()
 
-    def forward(self,data,temp,type,device,num_samples=200,beta=0.2):
+    def forward(self,data,temp,type,device,add_noise,num_samples=200,beta=0.2):
         vel_hist, neighbors, fut, img, waypts_e, bc_targets, waypt_lengths_e, r_mat, scale, ref_pos,ds_id = data
 
-        #self.vis(vel_hist,fut,waypts_e,img)
+        # self.vis(vel_hist,fut,waypts_e,img)
 
         hist = vel_hist.float().to(device)
         neighbors = neighbors.float().to(device)
         fut = fut.float().to(device)
         waypts_e = waypts_e.float().to(device)
         r_mat = r_mat.float().to(device)
+        if add_noise:
+            noise = torch.rand(img.shape)
+            img = img + noise
+        # tmp = img[0].permute(1,2,0).data.cpu().numpy()
+        # fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+        # ax.imshow(tmp)
+        # plt.show()
+        
         img = img.to(device)
+        
         bc_targets = bc_targets.bool().to(device)
         scale = scale.to(device)
 
