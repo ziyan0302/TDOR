@@ -1,4 +1,6 @@
 cvpr2022/
+results/
+runs/
 *.pyc
 *.pkl
 *.tar
